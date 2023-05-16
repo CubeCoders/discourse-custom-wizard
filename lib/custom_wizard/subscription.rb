@@ -1,26 +1,26 @@
 # frozen_string_literal: true
 class CustomWizard::Subscription
-  STANDARD_PRODUCT_ID = 'prod_MH11woVoZU5AWb'
-  BUSINESS_PRODUCT_ID = 'prod_MH0wT627okh3Ef'
-  COMMUNITY_PRODUCT_ID = 'prod_MU7l9EjxhaukZ7'
+  STANDARD_PRODUCT_ID = 'prod_xxxxxxxxxxxxx0'
+  BUSINESS_PRODUCT_ID = 'prod_xxxxxxxxxxxxx1'
+  COMMUNITY_PRODUCT_ID = 'prod_xxxxxxxxxxxxx2'
 
   def self.attributes
     {
       wizard: {
         required: {
-          none: [],
+          none: ['*'],
           standard: ['*'],
           business: ['*'],
           community: ['*']
         },
         permitted: {
-          none: [],
+          none: ['*'],
           standard: ['*'],
           business: ['*'],
-          community: ['*', "!#{CustomWizard::Wizard::GUEST_GROUP_ID}"]
+          community: ['*']
         },
         restart_on_revisit: {
-          none: [],
+          none: ['*'],
           standard: ['*'],
           business: ['*'],
           community: ['*']
@@ -28,19 +28,19 @@ class CustomWizard::Subscription
       },
       step: {
         condition: {
-          none: [],
+          none: ['*'],
           standard: ['*'],
           business: ['*'],
           community: ['*']
         },
         required_data: {
-          none: [],
+          none: ['*'],
           standard: ['*'],
           business: ['*'],
           community: ['*']
         },
         permitted_params: {
-          none: [],
+          none: ['*'],
           standard: ['*'],
           business: ['*'],
           community: ['*']
@@ -48,19 +48,19 @@ class CustomWizard::Subscription
       },
       field: {
         condition: {
-          none: [],
+          none: ['*'],
           standard: ['*'],
           business: ['*'],
           community: ['*']
         },
         type: {
-          none: ['text', 'textarea', 'text_only', 'date', 'time', 'date_time', 'number', 'checkbox', 'dropdown', 'upload'],
+          none: ['*'],
           standard: ['*'],
           business: ['*'],
           community: ['*']
         },
         realtime_validations: {
-          none: [],
+          none: ['*'],
           standard: ['*'],
           business: ['*'],
           community: ['*']
@@ -68,30 +68,30 @@ class CustomWizard::Subscription
       },
       action: {
         type: {
-          none: ['create_topic', 'update_profile', 'open_composer', 'route_to'],
-          standard: ['create_topic', 'update_profile', 'open_composer', 'route_to', 'send_message', 'watch_categories', 'watch_tags', 'add_to_group'],
+          none: ['*'],
+          standard: ['*'],
           business: ['*'],
           community: ['*']
         }
       },
       custom_field: {
         klass: {
-          none: ['topic', 'post'],
-          standard: ['topic', 'post'],
+          none: ['*'],
+          standard: ['*'],
           business: ['*'],
           community: ['*']
         },
         type: {
-          none: ['string', 'boolean', 'integer'],
-          standard: ['string', 'boolean', 'integer'],
+          none: ['*'],
+          standard: ['*'],
           business: ['*'],
           community: ['*']
         }
       },
       api: {
         all: {
-          none: [],
-          standard: [],
+          none: ['*'],
+          standard: ['*'],
           business: ['*'],
           community: ['*']
         }
@@ -104,28 +104,7 @@ class CustomWizard::Subscription
   end
 
   def includes?(feature, attribute, value = nil)
-    attributes = self.class.attributes[feature]
-
-    ## Attribute is not part of a subscription
-    return true unless attributes.present? && attributes.key?(attribute)
-
-    values = attributes[attribute][type]
-
-    ## Subscription type does not support the attribute.
-    return false if values.blank?
-
-    ## Value is an exception for the subscription type
-    if (exceptions = get_exceptions(values)).any?
-      value = mapped_output(value) if CustomWizard::Mapper.mapped_value?(value)
-      value = [*value].map(&:to_s)
-      return false if (exceptions & value).length > 0
-    end
-
-    ## Subscription type supports all values of the attribute.
-    return true if values.include?("*")
-
-    ## Subscription type supports some values of the attributes.
-    values.include?(value)
+    true
   end
 
   def type
@@ -136,7 +115,7 @@ class CustomWizard::Subscription
   end
 
   def subscribed?
-    standard? || business? || community?
+    true
   end
 
   def standard?
@@ -157,18 +136,6 @@ class CustomWizard::Subscription
 
   def find_subscription
     subscription = nil
-
-    if client_installed?
-      subscription = SubscriptionClientSubscription.active
-        .where(product_id: [STANDARD_PRODUCT_ID, BUSINESS_PRODUCT_ID, COMMUNITY_PRODUCT_ID])
-        .order("product_id = '#{BUSINESS_PRODUCT_ID}' DESC")
-        .first
-    end
-
-    unless subscription
-      subscription = OpenStruct.new(product_id: nil)
-    end
-
     subscription
   end
 
