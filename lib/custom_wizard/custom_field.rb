@@ -84,10 +84,6 @@ class ::CustomWizard::CustomField
         next
       end
 
-      if attr == 'klass' && !@subscription.includes?(:custom_field, :klass, value)
-        add_error(I18n.t("wizard.custom_field.error.subscription_type", type: value))
-      end
-
       if attr == 'serializers' && (unsupported = value - CLASSES[klass.to_sym]).length > 0
         add_error(I18n.t("#{i18n_key}.unsupported_serializers",
           class: klass,
@@ -98,11 +94,7 @@ class ::CustomWizard::CustomField
       if attr == 'type' && TYPES.exclude?(value)
         add_error(I18n.t("#{i18n_key}.unsupported_type", type: value))
       end
-
-      if attr == 'type' && !@subscription.includes?(:custom_field, :type, value)
-        add_error(I18n.t("wizard.custom_field.error.subscription_type", type: value))
-      end
-
+      
       if attr == 'name'
         unless value.is_a?(String)
           add_error(I18n.t("#{i18n_key}.name_invalid", name: value))
