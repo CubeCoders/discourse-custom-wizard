@@ -14,7 +14,7 @@ class CustomWizard::Subscription
           community: ['*']
         },
         permitted: {
-          none: [],
+          none: ['*'],
           standard: ['*'],
           business: ['*'],
           community: ['*']
@@ -140,19 +140,19 @@ class CustomWizard::Subscription
   end
 
   def standard?
-    @subscription.product_id === STANDARD_PRODUCT_ID
+    return false
   end
 
   def business?
-    @subscription.product_id === BUSINESS_PRODUCT_ID
+    return true
   end
 
   def community?
-    @subscription.product_id === COMMUNITY_PRODUCT_ID
+    return false
   end
 
   def client_installed?
-    defined?(SubscriptionClient) == 'constant' && SubscriptionClient.class == Module
+    return false
   end
 
   def find_subscription
