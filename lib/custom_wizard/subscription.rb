@@ -14,7 +14,7 @@ class CustomWizard::Subscription
           community: ['*']
         },
         permitted: {
-          none: ['*'],
+          none: [],
           standard: ['*'],
           business: ['*'],
           community: ['*']
@@ -40,7 +40,7 @@ class CustomWizard::Subscription
           community: ['*']
         },
         permitted_params: {
-          none: ['*'],
+          none: [],
           standard: ['*'],
           business: ['*'],
           community: ['*']
@@ -60,7 +60,7 @@ class CustomWizard::Subscription
           community: ['*']
         },
         realtime_validations: {
-          none: ['*'],
+          none: [],
           standard: ['*'],
           business: ['*'],
           community: ['*']
@@ -76,8 +76,8 @@ class CustomWizard::Subscription
       },
       custom_field: {
         klass: {
-          none: ['*'],
-          standard: ['*'],
+          none: ['topic', 'post'],
+          standard: ['topic', 'post'],
           business: ['*'],
           community: ['*']
         },
@@ -104,7 +104,28 @@ class CustomWizard::Subscription
   end
 
   def includes?(feature, attribute, value = nil)
-    true
+    attributes = self.class.attributes[feature]
+
+    ## Attribute is not part of a subscription
+    return true unless attributes.present? && attributes.key?(attribute)
+
+    values = attributes[attribute][type]
+
+    ## Subscription type does not support the attribute.
+    return false if values.blank?
+
+    ## Value is an exception for the subscription type
+    if (exceptions = get_exceptions(values)).any?
+      value = mapped_output(value) if CustomWizard::Mapper.mapped_value?(value)
+      value = [*value].map(&:to_s)
+      return false if (exceptions & value).length > 0
+    end
+
+    ## Subscription type supports all values of the attribute.
+    return true if values.include?("*")
+
+    ## Subscription type supports some values of the attributes.
+    values.include?(value)
   end
 
   def type
@@ -115,7 +136,7 @@ class CustomWizard::Subscription
   end
 
   def subscribed?
-    true
+    return true
   end
 
   def standard?
@@ -136,6 +157,18 @@ class CustomWizard::Subscription
 
   def find_subscription
     subscription = nil
+
+    if client_installed?
+      subscription = SubscriptionClientSubscription.active
+        .where(product_id: [STANDARD_PRODUCT_ID, BUSINESS_PRODUCT_ID, COMMUNITY_PRODUCT_ID])
+        .order("product_id = '#{BUSINESS_PRODUCT_ID}' DESC")
+        .first
+    end
+
+    unless subscription
+      subscription = OpenStruct.new(product_id: nil)
+    end
+
     subscription
   end
 
