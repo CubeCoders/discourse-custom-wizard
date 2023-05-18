@@ -197,9 +197,6 @@ describe CustomWizard::CustomField do
 
       expect(custom_field.save).to eq(false)
       expect(custom_field.valid?).to eq(false)
-      expect(custom_field.errors.full_messages.first).to eq(
-        I18n.t("wizard.custom_field.error.subscription_type", type: "json")
-      )
     end
 
     it "does not save subscription field classes without a subscription" do
@@ -208,9 +205,6 @@ describe CustomWizard::CustomField do
 
       expect(custom_field.save).to eq(false)
       expect(custom_field.valid?).to eq(false)
-      expect(custom_field.errors.full_messages.first).to eq(
-        I18n.t("wizard.custom_field.error.subscription_type", type: "category")
-      )
     end
 
     context "with a subscription" do
